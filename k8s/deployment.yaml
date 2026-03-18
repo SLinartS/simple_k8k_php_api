@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: php-api
-        image: your-username/php-api:latest
+        image: slinarts/php-api:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
