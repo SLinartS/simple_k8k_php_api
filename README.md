@@ -136,6 +136,54 @@ minikube addons enable ingress
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
 ```
 
+## CI/CD Pipeline
+
+This project uses GitHub Actions for automated CI/CD to Docker Hub and Kubernetes.
+
+### Pipeline Stages
+
+| Stage | Description | Trigger |
+|-------|-------------|---------|
+| Lint | PHP syntax check | All pushes/PRs |
+| Build | Build Docker image | All pushes/PRs |
+| Test | Start container, curl /health | All pushes/PRs |
+| Push | Push to Docker Hub | Main branch only |
+| Deploy | Apply k8s manifests | Main branch only |
+
+### Required GitHub Secrets
+
+Configure these secrets in your repository settings (`Settings > Secrets and variables > Actions`):
+
+| Secret | Description |
+|--------|-------------|
+| `DOCKER_USERNAME` | Docker Hub username |
+| `DOCKER_PASSWORD` | Docker Hub access token (not password) |
+| `KUBE_CONFIG` | Base64-encoded kubeconfig for target cluster |
+
+### Setting Up Docker Hub Credentials
+
+1. Create a Docker Hub account at https://hub.docker.com
+2. Generate an access token: `Account Settings > Security > New Access Token`
+3. Add secrets to GitHub:
+   - `DOCKER_USERNAME`: your Docker Hub username
+   - `DOCKER_PASSWORD`: the generated access token
+
+### Setting Up Kubeconfig
+
+1. Get your kubeconfig file content
+2. Base64 encode it: `cat ~/.kube/config | base64 -w 0`
+3. Add as `KUBE_CONFIG` secret in GitHub
+
+### Image Tagging Strategy
+
+- `your-username/php-api:latest` - Latest build from main
+- `your-username/php-api:main-<sha>` - Commit-specific tag for traceability
+
+### Branch Workflow
+
+- **main branch**: Build, test, push to Docker Hub, deploy to Kubernetes
+- **Pull requests**: Build and test only (no push/deploy)
+
 ## What Was Created
 
 1. **PHP Application**: A simple REST API with health, info, and greeting endpoints
@@ -144,3 +192,4 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
    - Deployment (2 replicas, resource limits, health probes)
    - Service (ClusterIP for internal routing)
    - Ingress (external access via nginx ingress controller)
+4. **CI/CD Pipeline**: GitHub Actions workflow for automated build, test, and deployment
